@@ -4,20 +4,23 @@ const main = require('./src');
 
 function usage() {
   const prog = process.argv[1];
-  console.log(`usage: ${prog} <pkg> <version>`)
+  console.log(`usage: ${prog} <pkg> <version> [directory]`)
 }
 
 if (require.main === module) {
-  const [pkg, version] = process.argv.slice(2);
+  const [pkg, version, directory] = process.argv.slice(2);
   if (pkg == null || version == null) {
     usage();
     process.exit(1);
   }
-  main(pkg, version)
+
+  main(pkg, version, directory)
     .then((result) => {
-      console.log('SUCCESS', result);
+      console.log(result);
+      process.exit(0);
     })
     .catch((err) => {
-      console.log('ERROR', err);
+      console.log(err);
+      process.exit(1);
     });
 }

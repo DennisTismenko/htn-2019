@@ -8,7 +8,7 @@ const validateVersion = require('./utility/validateVersion');
 const heuristics = require('./heuristic');
 require('dotenv').config();
 
-module.exports = async function main(pkgName, pkgVersion) {
+module.exports = async function main(pkgName, pkgVersion, localDirectory=undefined) {
   try {
     debug('package name', JSON.stringify(pkgName));
     debug('package version', JSON.stringify(pkgVersion));
@@ -23,18 +23,29 @@ module.exports = async function main(pkgName, pkgVersion) {
       throw new Error('Package is not using git');
     }
 
-    const tmpDir = fs.mkdtempSync(`${pkgName}@${pkgVersion}-`);
-    debug('make temporary directory', JSON.stringify(tmpDir));
-    
-    const tmpPkgDir = `${tmpDir}/pkg`;
-    fs.mkdirSync(tmpPkgDir);
-    debug('download npm package', JSON.stringify(pkg.dist.tarball));
-    await npmClone(pkg.dist.tarball, tmpPkgDir);
+    let tmpDir = localDirectory;
+    const tmpPkgDirName = 'pkg';
+    let tmpPkgDir;
+    const tmpRepoDirName = 'repo';
+    let tmpRepoDir;
+    if (tmpDir == null) {
+      tmpDir = fs.mkdtempSync(`${pkgName}@${pkgVersion}-`);
+      debug('new temporary directory', JSON.stringify(tmpDir));
 
-    const tmpRepoDir = `${tmpDir}/repo`;
-    fs.mkdirSync(tmpRepoDir);
-    debug('download git repository', JSON.stringify(pkg.repository.url));
-    await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+      debug('download npm package', JSON.stringify(pkg.dist.tarball));
+      tmpPkgDir = `${tmpDir}/${tmpPkgDirName}`;
+      fs.mkdirSync(tmpPkgDir);
+      await npmClone(pkg.dist.tarball, tmpPkgDir);
+      
+      debug('download git repository', JSON.stringify(pkg.repository.url));
+      tmpRepoDir = `${tmpDir}/${tmpRepoDirName}`;
+      fs.mkdirSync(tmpRepoDir);
+      await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+    } else {
+      debug('use existing temporary directory', JSON.stringify(tmpDir));
+      tmpPkgDir = `${localDirectory}/${tmpPkgDirName}`;
+      tmpRepoDir = `${localDirectory}/${tmpRepoDirName}`;
+    }
 
     const context = {
       pkg,
