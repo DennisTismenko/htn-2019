@@ -73,27 +73,34 @@ const eslint = new CLIEngine({
 });
 
 module.exports = async function eslintHeuristic(context) {
-  const report = eslint.executeOnFiles([context.pkgDir]);
-  if (report.usedDeprecatedRules.length > 0) {
-    debug('eslint is using deprecated rules', JSON.stringify(report.usedDeprecatedRules));
+  try {
+    const report = eslint.executeOnFiles([context.pkgDir]);
+    if (report.usedDeprecatedRules.length > 0) {
+      debug('eslint is using deprecated rules', JSON.stringify(report.usedDeprecatedRules));
+    }
+    return report.results
+      .filter((fileResult) => fileResult.errorCount > 0)
+      .map(({
+        messages,
+        ...fileResult
+      }) => messages.map(result => {
+        const resultLocation = `${path.relative(context.pkgDir, fileResult.filePath)}:${result.line}:${result.column}`;
+        return {
+          severity: 'low',
+          category,
+          reference: JSON.stringify({
+            [`eslint/${result.ruleId}`]: resultLocation,
+          }),
+          message: `${result.message} (${result.ruleId})
+    ${context.pkg.name}@${context.pkg.version}:${resultLocation}`,
+          url: `https://google.com/search?q=${encodeURIComponent(`eslint rule ${result.ruleId}`)}`
+        };
+      }))
+      .reduce((arr1, arr2) => arr1.concat(arr2), [])
+  } catch (err) {
+    if (err.messageTemplate === 'file-not-found') {
+      return [];
+    }
+    throw err;
   }
-  return report.results
-    .filter((fileResult) => fileResult.errorCount > 0)
-    .map(({
-      messages,
-      ...fileResult
-    }) => messages.map(result => {
-      const resultLocation = `${path.relative(context.pkgDir, fileResult.filePath)}:${result.line}:${result.column}`;
-      return {
-        severity: 'low',
-        category,
-        reference: JSON.stringify({
-          [`eslint/${result.ruleId}`]: resultLocation,
-        }),
-        message: `${result.message} (${result.ruleId})
-  ${context.pkg.name}@${context.pkg.version}:${resultLocation}`,
-        url: `https://google.com/search?q=${encodeURIComponent(`eslint rule ${result.ruleId}`)}`
-      };
-    }))
-    .reduce((arr1, arr2) => arr1.concat(arr2), [])
 }
