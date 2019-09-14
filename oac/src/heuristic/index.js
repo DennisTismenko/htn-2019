@@ -1,6 +1,6 @@
 const heuristics = [
   require('./eslint'),
-  require('./compliance')
+  require('./license'),
 ];
 
 module.exports = async function computeHeuristics(context) {
@@ -11,6 +11,7 @@ module.exports = async function computeHeuristics(context) {
 // {
 //   severity: "high"|"medium"|"low",
 //   category: "quality",
+//   reference: "{\"eslint/no-debugger\":\"src/index.js:13:34\"}",
 //   message: "Uses debugger statement",
 //   url: "https://eslint.org/docs/rules/no-debugger",
 // }
