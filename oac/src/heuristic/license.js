@@ -413,10 +413,10 @@ const acceptableLicenses = new Set([
 ]);
 
 module.exports = async function licenseHeuristic(context) {
-  let license = context.pkg.license;
+  let license = context.pkg.license || null;
   let severity;
   let message;
-  if (!license) {
+  if (license == null) {
     severity = "high";
     message = "Package is missing a license.";
   } else if (!allLicenses.has(license)) {
@@ -436,6 +436,6 @@ module.exports = async function licenseHeuristic(context) {
       license
     }),
     message,
-    url: `https://google.com/search?q=${encodeURIComponent(`software license ${license}`)}`,
+    url: `https://google.com/search?q=${encodeURIComponent(`software license ${license || 'no license'}`)}`,
   };
 };
