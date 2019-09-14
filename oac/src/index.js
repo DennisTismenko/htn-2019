@@ -5,7 +5,7 @@ const npmClone = require('./utility/npmClone');
 const gitClone = require('./utility/gitClone');
 const validatePkg = require('./utility/validatePkg');
 const validateVersion = require('./utility/validateVersion');
-// const heuristics = require('./heuristic');
+const heuristics = require('./heuristic');
 
 module.exports = async function main(pkgName, pkgVersion) {
   try {
@@ -41,7 +41,7 @@ module.exports = async function main(pkgName, pkgVersion) {
       repoDir: tmpRepoDir,
     };
 
-    await heuristics(context);
+    return await heuristics(context);
   } catch (err) {
     throw err;
   }

@@ -32,6 +32,6 @@ const eslint = new CLIEngine({
 
 module.exports = async function eslintHeuristic(context) {
   const report = eslint.executeOnFiles([context.pkgDir]);
-  console.log(report);
+  // console.log(report);
   return [];
 }
