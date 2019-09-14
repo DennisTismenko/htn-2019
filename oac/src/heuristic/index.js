@@ -2,6 +2,7 @@ const heuristics = [
   require('./snyk'),
   require('./eslint'),
   require('./license'),
+  require('./has-install-scripts'),
 ];
 
 module.exports = async function computeHeuristics(context) {
