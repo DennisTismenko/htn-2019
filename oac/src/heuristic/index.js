@@ -1,6 +1,7 @@
 const heuristics = [
-  require('./eslint'),
-  require('./compliance')
+  // require('./eslint'),
+  // require('./compliance')
+  require('./snyk-security')
 ];
 
 module.exports = async function computeHeuristics(context) {

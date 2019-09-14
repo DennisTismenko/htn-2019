@@ -6,6 +6,7 @@ const gitClone = require('./utility/gitClone');
 const validatePkg = require('./utility/validatePkg');
 const validateVersion = require('./utility/validateVersion');
 const heuristics = require('./heuristic');
+require('dotenv').config();
 
 module.exports = async function main(pkgName, pkgVersion) {
   try {
