@@ -92,7 +92,7 @@ module.exports = async function eslintHeuristic(context) {
             [`eslint/${result.ruleId}`]: resultLocation,
           }),
           message: `${result.message} (${result.ruleId})
-    ${context.pkg.name}@${context.pkg.version}:${resultLocation}`,
+${context.pkg.name}@${context.pkg.version}:${resultLocation}`,
           url: `https://google.com/search?q=${encodeURIComponent(`eslint rule ${result.ruleId}`)}`
         };
       }))
