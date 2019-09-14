@@ -80,8 +80,6 @@ typings/
 .dynamodb/
 
 # Project specific
-dist/
 .vscode
-credentials.js
 *.zip
 .ebextensions
