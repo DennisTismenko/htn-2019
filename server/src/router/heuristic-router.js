@@ -9,7 +9,7 @@ router.get('/:pkg/:version', async (req, res) => {
         const pkg = await npmRegistry(pkgName, pkgVersion)
         const lastestPkg = await npmRegistry(pkgName, 'latest')
         const heuristics = await heuristicService.runHeuristics(pkgName, pkgVersion);
-        const trust = heuristics.length > 10 ? 'no' : heuristics.length > 5 ? 'idk' : 'yes';
+        const trust = heuristics.length > 10 ? 'no' : heuristics.length > 3 ? 'idk' : 'yes';
         res.json({
             pkg,
             trust,

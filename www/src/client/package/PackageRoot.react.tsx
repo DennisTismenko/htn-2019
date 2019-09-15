@@ -58,6 +58,14 @@ const colorByTrust: {
   idk: 'orange',
 };
 
+const trustToString: {
+  [key in 'yes' | 'no' | 'idk']: string;
+} = {
+  yes: 'low risk',
+  idk: 'medium risk',
+  no: 'high risk',
+};
+
 const colorBySeverity: {
   [key in 'high' | 'medium' | 'low' | 'none']:
     | 'green'
@@ -219,6 +227,15 @@ export default function PackageRoot() {
                 >
                   {version}
                 </TextButton>
+              </Row>
+              <Row>
+                <Text
+                  type="body"
+                  level={1}
+                  color={colorByTrust[packageAnalysis.trust]}
+                >
+                  {trustToString[packageAnalysis.trust]}
+                </Text>
               </Row>
               <Row>
                 <Text type="body" level={1} color="grey">

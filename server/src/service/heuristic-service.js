@@ -9,41 +9,46 @@ const debug = require('debug')('main');
 
 class HeuristicService {
     async runHeuristics(pkgName, pkgVersion) {
-        return await this.runDependenciesHeuristics(pkgName, pkgVersion);
+        const heuristics = await this.dataAnalyzerOnDependencies(pkgName, pkgVersion);
+        return heuristics
     }
-    async runDependenciesHeuristics(pkgName, pkgVersion) {
-        let result = [];
-        let queue = [[pkgName, pkgVersion]]; // start BFS at source
-        let seenPackages = new Set();
+
+    async dataAnalyzerOnDependencies(pkgName, pkgVersion) {
+        const result = [];
+        const queue = [[pkgName, pkgVersion]];
+        // start BFS at source
+        const seenPackages = new Set();
         while (queue.length > 0) {
-            let [name, version] = queue.shift();
-            debug('heuristics bfs dequeue:', `${name}@${version}`);
-            let pkgInfo = await npmRegistry(name, version);
-            for (let [dependencyName, range] of Object.entries(pkgInfo.dependencies || {})) {
-                let versions = await npmRegistryVersions(dependencyName);
-                let dependencyVersion = semver.maxSatisfying(versions, range);
-                let dependency = [dependencyName, dependencyVersion];
-                if (!seenPackages.has(dependency)) { // don't search duplicates
+            const [currPkgName, currPkgVersion] = queue.shift();
+            debug('heuristics bfs dequeue:', `${currPkgName}@${currPkgVersion}`);
+            result.push(await this.dataAnalyzer(currPkgName, currPkgVersion));
+            const currPkg = await npmRegistry(currPkgName, currPkgVersion);
+            const currPkgDependencies = Object.entries(currPkg.dependencies || {});
+            for (const [depPkgName, depPkgVersionRange] of currPkgDependencies) {
+                const depPkgVersions = await npmRegistryVersions(depPkgName);
+                const depPkgVersion = semver.maxSatisfying(depPkgVersions, depPkgVersionRange);
+                const dependency = [depPkgName, depPkgVersion];
+                // don't search packages you've seen
+                if (!seenPackages.has(dependency)) {
                     queue.push(dependency);
                     seenPackages.add(dependency);
-                }
-            }
-            let pkg;
-            for (pkg of seenPackages) {
-                let [name, version] = pkg;
-                pkg = await dbService.getPackageByNameVersion(name, version);
-                if (!pkg) {
-                    pkg = await dataAnalyzer(name, version);
-                    await dbService.createPackage(name, version, pkg);
-                    result.push(pkg);
-                } else {
-                    result.push(pkg.heuristics);
                 }
             }
         }
         return result
             .reduce((arr1, arr2) => arr1.concat(arr2), [])
             .sort((x, y) => x.reference.localeCompare(y.reference));
+    }
+
+    async dataAnalyzer(pkgName, pkgVersion) {
+        let pkg = await dbService.getPackageByNameVersion(pkgName, pkgVersion);
+        if (!pkg) {
+            pkg = await dataAnalyzer(pkgName, pkgVersion);
+            await dbService.createPackage(pkgName, pkgVersion, pkg);
+            return pkg;
+        } else {
+            return pkg.heuristics;
+        }
     }
 }
 
