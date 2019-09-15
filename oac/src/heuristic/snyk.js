@@ -1,9 +1,9 @@
 const snyk = require('snyk');
 const category = 'security';
+snyk.api = process.env.SNYK_TOKEN;
 
 module.exports = async function snykHeuristics(context) {
     let pkgName = context.pkg.name;
-    snyk.api = process.env.SNYK_TOKEN;
     const result = await snyk.test(pkgName);
     return result.vulnerabilities.map((vuln) => ({
         severity: vuln.severity,
