@@ -1,7 +1,7 @@
 const fs = require('fs');
 const util = require('util');
 
-module.exports = function fileExists(path) => {
+module.exports = async function fileExists(path) {
   try {
     await util.promisify(fs.access)(path, fs.constants.F_OK);
     return true;
