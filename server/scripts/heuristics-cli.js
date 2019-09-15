@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const main = require('./src');
+//const main = require('../src/data-pipeline');
+const main = require('../src/service/heuristic-service');
 
 function usage() {
   const prog = process.argv[1];
@@ -14,7 +15,7 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  main(pkg, version, directory)
+  main.runHeuristics(pkg, version, directory)
     .then((result) => {
       console.log(result);
       process.exit(0);

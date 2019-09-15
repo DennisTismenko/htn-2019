@@ -5,9 +5,11 @@ module.exports = {
     async runHeuristics(pkgName, version) {
         let pkg = await dbService.getPackageByNameVersion(pkgName, version);
         if (!pkg) {
-            let heuristicData = await dataAnalyzer(pkgName, version);
-            await dbService.createPackage(pkgName, version, heuristicData);
+            pkg = await dataAnalyzer(pkgName, version);
+            await dbService.createPackage(pkgName, version, pkg);
+            return pkg
+        } else {
+          return pkg.heuristics
         }
-        
     },
 }

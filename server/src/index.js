@@ -3,7 +3,7 @@ const http = require('http');
 const bodyParser = require('body-parser');
 
 // Test
-// const heuristicService = require('./service/heuristic-service');
+ const heuristicService = require('./service/heuristic-service');
 
 const PORT = 3000;
 const app = express();
@@ -16,10 +16,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// const heuristicRouter = require('./router/heuristic-router');
-// app.use('/api/heuristics', heuristicRouter);
+ const heuristicRouter = require('./router/heuristic-router');
+ app.use('/api/heuristics', heuristicRouter);
 
-// heuristicService.runHeuristics('express', '4.17.1');
+ heuristicService.runHeuristics('express', '4.17.1');
 
 server.listen(PORT, err => {
     if (err) {
