@@ -1,14 +1,11 @@
 const fbaseService = require('./firebase-service');
-
-function concatPkgVersion(pkgName, pkgVersion) {
-    return `${pkgName}@${pkgVersion}`;
-}
+const pkgNamingUtil = require('../util/pkgNamingUtil');
 
 module.exports = {
-    getAllPackageByName(packageName) {
-        
+    async getPackageByNameVersion(pkgName, pkgVersion) {
+        return await fbaseService.fetchById(pkgNamingUtil.concatPkgVersion(pkgName, pkgVersion));
     },
-    createPackage(pkgName, pkgVersion, heuristics) {
-        fbaseService.create(concatPkgVersion(pkgName, pkgVersion), heuristics);
+    async createPackage(pkgName, pkgVersion, heuristics) {
+        await fbaseService.create(pkgNamingUtil.concatPkgVersion(pkgName, pkgVersion), heuristics);
     }
 };

@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const serviceAccount = require("../serviceAccountKey.json");
 const packageCollection = "packages";
+const pkgNamingUtil = require('../util/pkgNamingUtil');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -9,26 +10,18 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-function getNameVersion(pkgVersion) {
-    let splitNameVersion = pkgVersion.split('@');
-    return {
-        name: splitNameVersion[0],
-        version: splitNameVersion[1]
-    }
-}
-
 module.exports = {
-    create(pkgVersion, heuristics) {
-        db.collection(packageCollection).doc(pkgVersion).set({
+    async create(pkgVersion, heuristics) {
+        let ref = await db.collection(packageCollection).doc(pkgVersion).set({
             pkgId: pkgVersion,
-            ...getNameVersion(pkgVersion),
+            ...pkgNamingUtil.getNameVersion(pkgVersion),
             heuristics
         })
+        return ref.id;
     },
-    fetchById (pkgVersion) {
-
+    async fetchById (pkgVersion) {
+        let pkgRef = db.collection(packageCollection).doc(pkgVersion);
+        let pkg = await pkgRef.get();
+        return pkg.exists ? pkg.data() : null;
     },
-    fetchAllByName (pkgName) {
-
-    }
 };
