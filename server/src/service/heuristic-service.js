@@ -1,61 +1,46 @@
 const dataAnalyzer = require('../data-pipeline');
 const dbService = require('./database-service');
 const npmRegistry = require('../data-pipeline/utility/npmRegistry');
+const npmRegistryVersions = require('../data-pipeline/utility/npmRegistryVersions');
 const semver = require('semver');
-const debug = require('debug')('main');
+const debug = require('debug')('main-heuristic');
 
 module.exports = {
-    async runHeuristics(pkgName, version) {
-        let pkg = await dbService.getPackageByNameVersion(pkgName, version);
-        if (!pkg) {
-            pkg = await dataAnalyzer(pkgName, version);
-            await dbService.createPackage(pkgName, version, pkg);
-            return pkg
-        } else {
-          return pkg.heuristics
-        }
+    async runHeuristics(pkgName, pkgVersion) {
+        await runDependenciesHeuristics(pkgName, pkgVersion);
+        await runDependenciesHeuristics(pkgName, prevPkgVersion);
     },
-    async runDependenciesHeuristics(pkgName, version) {
+    async runDependenciesHeuristics(pkgName, pkgVersion) {
         let result = [];
-        queue = [[pkgName, version]]; // start BFS at source
+        queue = [[pkgName, pkgVersion]]; // start BFS at source
         seenPackages = new Set();
         while (queue.length > 0) {
-            let u = queue.shift();
-            let name = u[0], version = u[1];
-            console.log('Dequeued: ', name, version);
+            let [name, version] = queue.shift();
+            debug('runDependenciesHeuristics dequeue', name, version);
             let pkgInfo = await npmRegistry(name, version);
-            for (let [dependencyName, range] of Object.entries(pkgInfo.dependencies)) {
-                console.log(dependencyName, range);
-                console.log('To enqueue ', name, version);
-                let info = await npmRegistry(dependencyName, '');
-                let versions = Object.keys(info.versions);
+            for (let [dependencyName, range] of Object.entries(pkgInfo.dependencies || {})) {
+                let versions = await npmRegistryVersions(dependencyName);
                 let dependencyVersion = semver.maxSatisfying(versions, range);
                 let dependency = [dependencyName, dependencyVersion];
                 if (!seenPackages.has(dependency)) { // don't search duplicates
                     queue.push(dependency);
                     seenPackages.add(dependency);
                 }
-                console.log('queue: ' + queue);
-                let val = '', item;
-                for (item of seenPackages.values())
-                    val += item + ', ';
-                console.log('seenPackages: ' + val);
             }
             let pkg;
             for (pkg of seenPackages) {
                 let [name, version] = pkg;
                 pkg = await dbService.getPackageByNameVersion(name, version);
                 if (!pkg) {
-                    pkg = await dataAnalyzer(pkgName, version);
-                    await dbService.createPackage(pkgName, version, pkg);
+                    pkg = await dataAnalyzer(name, version);
+                    await dbService.createPackage(name, version, pkg);
                     result.push(pkg);
                 } else {
-                    result(pkg.heuristics);
+                    result.push(pkg.heuristics);
                 }
             }
         }
-        return result 
-      
+        return result.reduce((arr1, arr2) => arr1.concat(arr2), []);
     },
         
 }

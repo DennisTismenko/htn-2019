@@ -16,10 +16,8 @@ app.use((req, res, next) => {
     next();
 });
 
- const heuristicRouter = require('./router/heuristic-router');
- app.use('/api/heuristics', heuristicRouter);
-
- heuristicService.runHeuristics('express', '4.17.1');
+const heuristicRouter = require('./router/heuristic-router');
+app.use('/api/heuristics', heuristicRouter);
 
 server.listen(PORT, err => {
     if (err) {
