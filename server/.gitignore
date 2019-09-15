@@ -83,3 +83,4 @@ typings/
 .vscode
 *.zip
 .ebextensions
+src/serviceAccountKey.json

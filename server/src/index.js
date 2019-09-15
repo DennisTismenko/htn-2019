@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const bodyParser = require('body-parser');
 
+
 const PORT = 3000;
 const app = express();
 app.use(bodyParser.json());
@@ -22,5 +23,5 @@ server.listen(PORT, err => {
     } else {
         console.log('HTTP server on http://localhost:%s', PORT);
     }
-})
+});
 
