@@ -4,6 +4,8 @@ const heuristics = [
   require('./eslint'),
   require('./license'),
   require('./has-install-scripts'),
+  require('./scm-missing'),
+  require('./scm-tagged-versions'),
 ];
 
 module.exports = async function computeHeuristics(context) {

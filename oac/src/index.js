@@ -1,10 +1,12 @@
 const debug = require('debug')('main');
 const fs = require('fs');
+const path = require('path');
 const npmRegistry = require('./utility/npmRegistry');
 const npmClone = require('./utility/npmClone');
 const gitClone = require('./utility/gitClone');
 const validatePkg = require('./utility/validatePkg');
 const validateVersion = require('./utility/validateVersion');
+const fileExists = require('./utility/fileExists');
 const heuristics = require('./heuristic');
 require('dotenv').config();
 
@@ -17,17 +19,12 @@ module.exports = async function main(pkgName, pkgVersion, localDirectory=undefin
     }
 
     const pkg = await npmRegistry(pkgName, pkgVersion);
-    debug('package repository', JSON.stringify(pkg.repository));
-    debug('package git head', JSON.stringify(pkg.gitHead));
-    if (pkg.repository == null || pkg.repository.type !== 'git' || pkg.gitHead == null) {
-      throw new Error('Package is not using git');
-    }
 
     let tmpDir = localDirectory;
     const tmpPkgDirName = 'pkg';
-    let tmpPkgDir;
+    let tmpPkgDir = null;
     const tmpRepoDirName = 'repo';
-    let tmpRepoDir;
+    let tmpRepoDir = null;
     if (tmpDir == null) {
       tmpDir = fs.mkdtempSync(`${pkgName}@${pkgVersion}-`);
       debug('new temporary directory', JSON.stringify(tmpDir));
@@ -37,20 +34,27 @@ module.exports = async function main(pkgName, pkgVersion, localDirectory=undefin
       fs.mkdirSync(tmpPkgDir);
       await npmClone(pkg.dist.tarball, tmpPkgDir);
       
-      debug('download git repository', JSON.stringify(pkg.repository.url));
-      tmpRepoDir = `${tmpDir}/${tmpRepoDirName}`;
-      fs.mkdirSync(tmpRepoDir);
-      await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+      if (pkg.repository != null && pkg.repository.type === 'git' && pkg.gitHead != null) {
+        debug('package repository', JSON.stringify(pkg.repository));
+        debug('package git head', JSON.stringify(pkg.gitHead));
+        debug('download git repository', JSON.stringify(pkg.repository.url));
+        tmpRepoDir = `${tmpDir}/${tmpRepoDirName}`;
+        fs.mkdirSync(tmpRepoDir);
+        await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+      }
     } else {
       debug('use existing temporary directory', JSON.stringify(tmpDir));
       tmpPkgDir = `${localDirectory}/${tmpPkgDirName}`;
       tmpRepoDir = `${localDirectory}/${tmpRepoDirName}`;
+      if (!(await fileExists(tmpRepoDir))) {
+        tmpRepoDir = null;
+      }
     }
 
     const context = {
       pkg,
-      pkgDir: tmpPkgDir,
-      repoDir: tmpRepoDir,
+      pkgDir: path.resolve(tmpPkgDir),
+      repoDir: tmpRepoDir && path.resolve(tmpRepoDir),
     };
 
     return await heuristics(context);

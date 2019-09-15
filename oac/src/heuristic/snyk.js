@@ -10,5 +10,7 @@ module.exports = async function snykHeuristics(context) {
         category,
         reference: JSON.stringify({ snyk: vuln.id }),
         message: vuln.description,
+        // URL is in the message, we will wait to see more data samples before we try to extract it.
+        url: null,
     }));
 }

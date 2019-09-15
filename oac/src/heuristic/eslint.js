@@ -58,8 +58,6 @@ const eslint = new CLIEngine({
       }],
     }],
     'node/no-deprecated-api': 'error',
-    'node/no-missing-import': 'error',
-    'node/no-missing-require': 'error',
     'security/detect-buffer-noassert': 'error',
     'security/detect-child-process': 'error',
     'security/detect-disable-mustache-escape': 'error',
