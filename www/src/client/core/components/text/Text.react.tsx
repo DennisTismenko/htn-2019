@@ -4,7 +4,14 @@ import styled from 'styled-components';
 type TextType = 'headline' | 'body';
 type TextLevel = 1 | 2;
 type TextTypeAndLevel = 'headline1' | 'headline2' | 'body1' | 'body2';
-type TextColor = 'black' | 'grey' | 'white' | 'green' | 'red' | 'orange';
+type TextColor =
+  | 'black'
+  | 'grey'
+  | 'white'
+  | 'green'
+  | 'red'
+  | 'orange'
+  | 'yellow';
 type TextTransform = 'uppercase' | 'lowercase' | 'capitalize' | 'none';
 type TextTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p';
 type TextFontStyle = 'normal' | 'italic' | 'oblique' | string;
@@ -42,6 +49,7 @@ const colors: {
   green: '#33aa33',
   red: '#cc3333',
   orange: '#cc8033',
+  yellow: '#dbdb70',
 };
 
 const fonts = {

@@ -56,6 +56,19 @@ const colorByTrust: {
   idk: 'orange',
 };
 
+const colorBySeverity: {
+  [key in 'high' | 'medium' | 'low' | 'none']:
+    | 'green'
+    | 'red'
+    | 'orange'
+    | 'yellow';
+} = {
+  high: 'red',
+  medium: 'orange',
+  low: 'yellow',
+  none: 'green',
+};
+
 export default function PackageRoot() {
   const router = useRouter<PackageRootParams>();
   const {pkg, version} = router.match.params;
@@ -190,7 +203,32 @@ export default function PackageRoot() {
               ) : null}
             </Column>
             <Column width="70%">
-              {/* Green, Red, Orange bullet points go here from heuristics array */}
+              {packageAnalysis.heuristics.map(({message, severity, url}) => (
+                <Row>
+                  <HeuristicBullet color={colorBySeverity[severity]} />
+                  {url != null ? (
+                    <Text
+                      type="body"
+                      level={2}
+                      color={colorBySeverity[severity]}
+                      inline
+                    >
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        {message}
+                      </a>
+                    </Text>
+                  ) : (
+                    <Text
+                      type="body"
+                      level={2}
+                      color={colorBySeverity[severity]}
+                      inline
+                    >
+                      {message}
+                    </Text>
+                  )}
+                </Row>
+              ))}
             </Column>
           </HeuristicsRoot>
         ) : null}
@@ -233,6 +271,19 @@ const Row = styled.div`
   min-height: 1px;
 `;
 
+interface HeuristicBulletProps {
+  color: 'red' | 'orange' | 'yellow' | 'green';
+}
+
+const HeuristicBullet = styled.span<HeuristicBulletProps>`
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background-color: ${({color}) => color};
+`;
+
 interface ColumnProps {
   width: string;
 }
@@ -242,4 +293,5 @@ const Column = styled.div<ColumnProps>`
   box-sizing: border-box;
   padding: 8px 0;
   width: ${({width}: ColumnProps) => width};
+  vertical-align: top;
 `;
