@@ -1,11 +1,12 @@
 const heuristics = [
-  require('./gyp'),
-  require('./snyk'),
-  require('./eslint'),
-  require('./license'),
-  require('./has-install-scripts'),
-  require('./scm-missing'),
-  require('./scm-tagged-versions'),
+  // require('./gyp'),
+  // require('./snyk'),
+  // require('./eslint'),
+  // require('./license'),
+  // require('./has-install-scripts'),
+  // require('./scm-missing'),
+  // require('./scm-tagged-versions'),
+  require('./readme'),
 ];
 
 module.exports = async function computeHeuristics(context) {

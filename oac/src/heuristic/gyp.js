@@ -4,7 +4,6 @@ const category = "risk";
 const gypFile = "binding.gyp";
 
 module.exports = async function gypHeuristics(context) {
-    let gypExists;
     try {
         await util.promisify(fs.access)(`${context.repoDir}/${gypFile}`, fs.constants.F_OK);
         return {
