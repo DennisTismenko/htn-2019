@@ -90,9 +90,7 @@ module.exports = async function eslintHeuristic(context) {
         return {
           severity: ['low', 'medium', 'high'][result.severity],
           category: 'risk',
-          reference: JSON.stringify({
-            [`eslint/${result.ruleId}`]: resultLocation,
-          }),
+          reference: JSON.stringify([context.pkg.name, context.pkg.version, `eslint/${result.ruleId}`, resultLocation]),
           message: `${result.message} (${result.ruleId})
 ${context.pkg.name}@${context.pkg.version}:${resultLocation}`,
           url: `https://google.com/search?q=${encodeURIComponent(`eslint rule ${result.ruleId}`)}`

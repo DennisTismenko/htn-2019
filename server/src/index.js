@@ -1,13 +1,17 @@
 const express = require('express');
 const http = require('http');
 const bodyParser = require('body-parser');
-
-// Test
- const heuristicService = require('./service/heuristic-service');
+const cors = require('cors')
 
 const PORT = 3000;
 const app = express();
+
+app.use(cors({
+    origin: '*'
+}));
+
 app.use(bodyParser.json());
+
 const server = http.createServer(app);
 
 // Debug

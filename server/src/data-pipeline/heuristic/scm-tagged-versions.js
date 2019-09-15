@@ -17,8 +17,7 @@ module.exports = async function scmTaggedVersions(context) {
     severity: 'medium',
     message: 'Package version does not have a corresponding tag in source control repository.',
     category: 'quality',
-    reference: JSON.stringify({
-      'scm-tagged-versions': context.pkg.version,
-    }),
+    reference: JSON.stringify([context.pkg.name, context.pkg.version, 'scm-tagged-versions', context.pkg.version]),
+    url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
   }];
 }

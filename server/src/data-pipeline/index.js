@@ -34,13 +34,17 @@ module.exports = async function main(pkgName, pkgVersion, localDirectory=undefin
       fs.mkdirSync(tmpPkgDir);
       await npmClone(pkg.dist.tarball, tmpPkgDir);
       
-      if (pkg.repository != null && pkg.repository.type === 'git' && pkg.gitHead != null) {
-        debug('package repository', JSON.stringify(pkg.repository));
-        debug('package git head', JSON.stringify(pkg.gitHead));
-        debug('download git repository', JSON.stringify(pkg.repository.url));
-        tmpRepoDir = `${tmpDir}/${tmpRepoDirName}`;
-        fs.mkdirSync(tmpRepoDir);
-        await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+      try {
+        if (pkg.repository != null && pkg.repository.type === 'git' && pkg.gitHead != null) {
+          debug('package repository', JSON.stringify(pkg.repository));
+          debug('package git head', JSON.stringify(pkg.gitHead));
+          debug('download git repository', JSON.stringify(pkg.repository.url));
+          tmpRepoDir = `${tmpDir}/${tmpRepoDirName}`;
+          fs.mkdirSync(tmpRepoDir);
+          await gitClone(pkg.repository.url, pkg.gitHead, tmpRepoDir);
+        }
+      } catch (err) {
+        tmpRepoDir = null;
       }
     } else {
       debug('use existing temporary directory', JSON.stringify(tmpDir));

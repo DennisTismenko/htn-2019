@@ -8,64 +8,56 @@ const readmeFiles = [
     /^README$/i,
     /^README.1ST$/i
 ];
-let readmeFileCached = false;
-let readmeFile;
 
-
-async function readmeExists(context) {
+async function readmeMissing(context) {
     const readdir = util.promisify(fs.readdir);
     const files = await readdir(context.repoDir);
-    readmeFile = files.find(file => {
-        return readmeFiles.some(fn => fn.test(file));
-    });
+    const readmeFile = files.find(file => readmeFiles.some(fn => fn.test(file)));
     if (readmeFile) {
-        readmeFileCached = true;
         return [];
     } else {
-        return {
+        return [{
             severity: 'medium',
             category,
-            reference: JSON.stringify({ readmeExists: false }),
+            reference: JSON.stringify([context.pkg.name, context.pkg.version, 'readme-missing' ]),
             message: 'missing README.md file indicates that the project lacks proper documentation.',
-        }
+            url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
+        }]
     }
 }
 
 
 async function readmeSize(context) {
-    if (readmeFileCached) {
-        const stat = util.promisify(fs.stat);
-        const stats = await stat(`${context.repoDir}/${readmeFile}`);
-        return stats.size;
-    }
-    return [];
+    const readdir = util.promisify(fs.readdir);
+    const files = await readdir(context.repoDir);
+    const readmeFile = files.find(file => readmeFiles.some(fn => fn.test(file)));
+    const stat = util.promisify(fs.stat);
+    const stats = await stat(`${context.repoDir}/${readmeFile}`);
+    return stats.size;
 }
 
 module.exports = async function readmeHeuristics(context) {
     if (!context.repoDir) {
         return [];
     }
-    let readmeExistsHeuristic = await readmeExists(context);
-    if (readmeExistsHeuristic) {
-        const readmeBytesSize = await readmeSize(context);
-        if (readmeBytesSize < 500) {
-            return {
-                severity: 'medium',
-                category,
-                reference: JSON.stringify({ readmeSize: readmeBytesSize }),
-                message: 'README.md file is a substantially inadequate file size, potentially suggesting a severe lack of documentation.'
-            }
-        } else if (readmeBytesSize < 1000) {
-            return {
-                severity: 'low',
-                category,
-                reference: JSON.stringify( {readmeSize: readmeBytesSize }),
-                message: 'README.md file is an inadequate file size, potentially suggesting a lack documentation.'
-            }
-        } else {
-            return [];
-        }
-    } else {
-        return readmeExistsHeuristic;
+    let readmeHeuristic = await readmeMissing(context);
+    const readmeBytesSize = await readmeSize(context);
+    if (readmeBytesSize < 500) {
+        readmeHeuristic.push({
+            severity: 'medium',
+            category,
+            reference: JSON.stringify([context.pkg.name, context.pkg.version, 'readme-size', readmeBytesSize ]),
+            message: 'README.md file is a substantially inadequate file size, potentially suggesting a severe lack of documentation.',
+            url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
+        })
+    } else if (readmeBytesSize < 1000) {
+        readmeHeuristic.push({
+            severity: 'low',
+            category,
+            reference: JSON.stringify([context.pkg.name, context.pkg.version, 'readme-size', readmeBytesSize ]),
+            message: 'README.md file is an inadequate file size, potentially suggesting a lack documentation.',
+            url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
+        })
     }
+    return readmeHeuristic;
 }

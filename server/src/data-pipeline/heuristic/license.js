@@ -432,10 +432,8 @@ module.exports = async function licenseHeuristic(context) {
   return {
     severity,
     category,
-    reference: JSON.stringify({
-      license
-    }),
+    reference: JSON.stringify([context.pkg.name, context.pkg.version, 'license', license]),
     message,
-    url: `https://google.com/search?q=${encodeURIComponent(`software license ${license || 'no license'}`)}`,
+    url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
   };
 };

@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useState} from 'react';
 import Helmet from 'react-helmet';
 import styled, {css} from 'styled-components';
 import Disqus from 'disqus-react';
+import groupBy from 'lodash/groupBy';
 import {useRouter} from '../core/routing/useRouter';
 import {PackageRootParams, packageRoute} from './packageRoute';
 import {urlBuilder} from '../core/routing/urlBuilder';
@@ -12,6 +13,7 @@ import {PackageSearch} from './components/PackageSearch.react';
 import {
   PackageRepository,
   PackageAnalysisModel,
+  PackageHeuristic,
 } from './repositories/PackageRepository';
 import ShieldCheckIcon from './shieldCheck.svg';
 import ShieldCrossIcon from './shieldCheck.svg';
@@ -69,6 +71,74 @@ const colorBySeverity: {
   none: 'green',
 };
 
+const colorByCategory: {
+  [key in 'security' | 'quality' | 'risk' | 'compliance']: string;
+} = {
+  security: '#3F51B5',
+  quality: '#FFC107',
+  risk: '#F44336',
+  compliance: '#00BCD4',
+};
+
+function HeuristicsGroup({group}: {group: PackageHeuristic[]}) {
+  const [isShown, setIsShown] = useState(false);
+  return (
+    <Row>
+      <Row>
+        <HeuristicCategory color={colorByCategory[group[0].category]}>
+          <Text type="body" level={2} color="white" inline>
+            {group[0].category}
+          </Text>
+        </HeuristicCategory>
+        <TextButton
+          onClick={() => setIsShown(!isShown)}
+          text={{type: 'body', level: 2}}
+        >
+          <strong>
+            {JSON.parse(group[0].reference)
+              .slice(0, 2)
+              .join('@')}
+          </strong>{' '}
+          - {JSON.parse(group[0].reference)[2]}
+        </TextButton>
+      </Row>
+      {isShown && (
+        <>
+          {Object.values(groupBy(group, 'reference'))
+            .map(([heuristic]) => heuristic)
+            .map(({message, severity, url}, index) => (
+              <Row key={index}>
+                <HeuristicRisk color={colorBySeverity[severity]} />
+                {url != null ? (
+                  <Text
+                    type="body"
+                    level={2}
+                    color={colorBySeverity[severity]}
+                    inline
+                  >
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {message}
+                    </a>
+                  </Text>
+                ) : (
+                  <Text
+                    type="body"
+                    level={2}
+                    color={colorBySeverity[severity]}
+                    inline
+                  >
+                    {message}
+                  </Text>
+                )}
+              </Row>
+            ))}
+          <Row />
+        </>
+      )}
+    </Row>
+  );
+}
+
 export default function PackageRoot() {
   const router = useRouter<PackageRootParams>();
   const {pkg, version} = router.match.params;
@@ -78,6 +148,7 @@ export default function PackageRoot() {
   ] = useState<PackageAnalysisModel | null>(null);
   const packageRepository = useMemo(() => new PackageRepository(), []);
   useEffect(() => {
+    setPackageAnalysis(null);
     packageRepository.pkgByVersion(pkg, version).then(setPackageAnalysis);
   }, [packageRepository, pkg, version]);
   const disqusShortname = 'nodome-io';
@@ -87,6 +158,14 @@ export default function PackageRoot() {
     url: `https://nodome.io${router.location.pathname}`,
   };
   const Shield = packageAnalysis ? ShieldByTrust[packageAnalysis.trust] : null;
+  const heuristicsGroups =
+    packageAnalysis &&
+    Object.values(
+      groupBy(packageAnalysis.heuristics, heuristic =>
+        JSON.stringify(JSON.parse(heuristic.reference).slice(0, 3)),
+      ),
+    );
+  console.log(heuristicsGroups);
   return (
     <>
       <Helmet>
@@ -202,36 +281,33 @@ export default function PackageRoot() {
                 </>
               ) : null}
             </Column>
-            <Column width="70%">
-              {packageAnalysis.heuristics.map(({message, severity, url}) => (
-                <Row>
-                  <HeuristicBullet color={colorBySeverity[severity]} />
-                  {url != null ? (
-                    <Text
-                      type="body"
-                      level={2}
-                      color={colorBySeverity[severity]}
-                      inline
-                    >
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        {message}
-                      </a>
-                    </Text>
-                  ) : (
-                    <Text
-                      type="body"
-                      level={2}
-                      color={colorBySeverity[severity]}
-                      inline
-                    >
-                      {message}
-                    </Text>
-                  )}
+            <Column width="70%" style={{overflowY: 'scroll', maxHeight: 640}}>
+              {packageAnalysis.heuristics.length === 0 ? (
+                <Row
+                  style={{textAlign: 'center', marginTop: 70, maxWidth: 400}}
+                >
+                  <Text type="body" level={1} color="green">
+                    Green! No security, compliance, quality, and risk issues
+                    found.
+                  </Text>
                 </Row>
-              ))}
+              ) : null}
+              {heuristicsGroups &&
+                heuristicsGroups.map((group, index) => (
+                  <HeuristicsGroup key={index} group={group} />
+                ))}
             </Column>
           </HeuristicsRoot>
-        ) : null}
+        ) : (
+          <HeuristicsRoot>
+            <Row style={{textAlign: 'center', margin: '240px 0 320px'}}>
+              <Text type="body" level={2} color="grey">
+                Scanning package for security, compliance, quality, and risk
+                issues...
+              </Text>
+            </Row>
+          </HeuristicsRoot>
+        )}
         <DiscussionRoot>
           <Disqus.CommentCount
             shortname={disqusShortname}
@@ -271,16 +347,29 @@ const Row = styled.div`
   min-height: 1px;
 `;
 
-interface HeuristicBulletProps {
+interface HeuristicRiskProps {
   color: 'red' | 'orange' | 'yellow' | 'green';
 }
 
-const HeuristicBullet = styled.span<HeuristicBulletProps>`
+const HeuristicRisk = styled.span<HeuristicRiskProps>`
   display: inline-block;
   width: 12px;
   height: 12px;
   margin-right: 4px;
   border-radius: 50%;
+  background-color: ${({color}) => color};
+`;
+
+interface HeuristicCategoryProps {
+  color: string;
+}
+
+const HeuristicCategory = styled.span<HeuristicCategoryProps>`
+  display: inline-block;
+  vertical-align: top;
+  padding: 0px 4px;
+  border-radius: 16px;
+  margin-right: 4px;
   background-color: ${({color}) => color};
 `;
 

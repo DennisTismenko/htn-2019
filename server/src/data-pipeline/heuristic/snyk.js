@@ -8,7 +8,7 @@ module.exports = async function snykHeuristics(context) {
     return result.vulnerabilities.map((vuln) => ({
         severity: vuln.severity,
         category,
-        reference: JSON.stringify({ snyk: vuln.id }),
+        reference: JSON.stringify([context.pkg.name, context.pkg.version, 'snyk', vuln.id ]),
         message: vuln.description,
         // URL is in the message, we will wait to see more data samples before we try to extract it.
         url: null,

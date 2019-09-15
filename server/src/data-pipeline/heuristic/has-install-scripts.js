@@ -12,9 +12,8 @@ module.exports = async function hasInstallScriptsHeuristic(context) {
     .map(([scriptName, script]) => ({
       severity: 'high',
       category: 'risk',
-      reference: JSON.stringify({
-        [`has-install-scripts/${scriptName}`]: script,
-      }),
+      reference: JSON.stringify([context.pkg.name, context.pkg.version, `has-install-scripts/${scriptName}`, script]),
       message: `Lifecycle scripts which trigger on install can be useful but are inherently risky, as they may run unwanted CLI commands before other tools or the user can inspect the package. Package defines ${JSON.stringify(scriptName)}: ${JSON.stringify(script)}.`,
+      url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
     }))
 }

@@ -9,9 +9,9 @@ module.exports = async function gypHeuristics(context) {
         return {
             severity: 'high',
             category,
-            reference: JSON.stringify({ gyp: true }),
+            reference: JSON.stringify([context.pkg.name, context.pkg.version, 'gyp' ]),
             message: 'gyp build files from native modules may execute arbitrary code and also run on install.',
-            url: 'https://github.com/nodejs/node-gyp'
+            url: `https://www.npmjs.com/package/${context.pkg.name}/v/${context.pkg.version}`,
         };
     } catch (err) {
         if (err.code === 'ENOENT') {
