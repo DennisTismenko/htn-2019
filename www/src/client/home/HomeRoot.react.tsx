@@ -1,59 +1,10 @@
-import React, {useState, useEffect} from 'react';
-import flow from 'lodash/flow';
+import React from 'react';
 import styled from 'styled-components';
 import Helmet from 'react-helmet';
-import {
-  TextInput,
-  TextInputOptionEntry,
-  TextInputOptionRendererProps,
-} from '../core/components/inputs/TextInput.react';
 import {Text} from '../core/components/text/Text.react';
-import {
-  HomePackageRepository,
-  HomePackageModel,
-} from './repositories/HomePackageRepository';
-import {useRouter} from '../core/routing/useRouter';
-import {urlBuilder} from '../core/routing/urlBuilder';
-import {packageRoute} from '../package/packageRoute';
-
-const queryTransform = (query: string) => query.toLowerCase();
-
-const homePackageRepository = new HomePackageRepository();
-
-const HomePackageOptionRenderer = ({
-  entry: {
-    value: {name, version, description},
-  },
-}: TextInputOptionRendererProps<HomePackageModel>) => (
-  <>
-    <Row>
-      <Text type="body" level={2}>
-        <strong>
-          {name}@{version}
-        </strong>
-      </Text>
-    </Row>
-    <Row>
-      <Text type="body" level={2} ellipsis>
-        <span style={{whiteSpace: 'nowrap'}}>{description}</span>
-      </Text>
-    </Row>
-  </>
-);
+import {PackageSearch} from '../package/components/PackageSearch.react';
 
 export default function HomeRoot() {
-  const [query, setQuery] = useState('');
-  const [options, setOptions] = useState<
-    TextInputOptionEntry<HomePackageModel>[]
-  >([]);
-  const [error, setError] = useState<Error | null>(null);
-  const router = useRouter();
-  useEffect(() => {
-    homePackageRepository
-      .autoComplete(query)
-      .then(setOptions)
-      .catch(setError);
-  }, [query]);
   return (
     <>
       <Helmet>
@@ -72,29 +23,7 @@ export default function HomeRoot() {
         </Row>
         <Row />
         <Row>
-          <TextInput
-            onChange={flow([queryTransform, setQuery])}
-            value={query}
-            placeholder="Search"
-            options={options}
-            onOptionClick={({key, value: {name, version}}) => {
-              setQuery(key);
-              router.history.push(
-                urlBuilder(packageRoute.path, {
-                  pkg: name,
-                  version,
-                }),
-              );
-            }}
-            OptionRenderer={HomePackageOptionRenderer}
-          />
-        </Row>
-        <Row>
-          {error != null ? (
-            <Text type="body" level={2} color="red">
-              {error.message}
-            </Text>
-          ) : null}
+          <PackageSearch />
         </Row>
       </Root>
     </>
