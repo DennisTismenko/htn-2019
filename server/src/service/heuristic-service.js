@@ -1,15 +1,9 @@
-function verifyNCMTrust(npmPackage) {
+const dataAnalyzer = require('../data-pipeline');
+const dbService = require('./database-service');
 
-}
-
-function verifyTBV(npmPackage) {
-
-}
-
-function verifyGithubReputation(npmPackage) {
-
-}
-
-function verifySocialReputation(npmPackage) {
-    
+module.exports = {
+    runHeuristics: async function runHeuristics(pkgName, version) {
+        let heuristicData = await dataAnalyzer(pkgName, version);
+        dbService.createPackage(pkgName, version, heuristicData);
+    },
 }
