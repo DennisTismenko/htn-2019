@@ -26,7 +26,7 @@ module.exports = async function main(pkgName, pkgVersion, localDirectory=undefin
     const tmpRepoDirName = 'repo';
     let tmpRepoDir = null;
     if (tmpDir == null) {
-      tmpDir = fs.mkdtempSync(`${pkgName}@${pkgVersion}-`);
+      tmpDir = fs.mkdtempSync(`/tmp/${pkgName}@${pkgVersion}-`);
       debug('new temporary directory', JSON.stringify(tmpDir));
 
       debug('download npm package', JSON.stringify(pkg.dist.tarball));

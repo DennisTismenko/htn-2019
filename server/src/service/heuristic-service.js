@@ -35,6 +35,7 @@ class HeuristicService {
                 }
             }
         }
+        debug('heuristics bfs done!')
         return result
             .reduce((arr1, arr2) => arr1.concat(arr2), [])
             .sort((x, y) => x.reference.localeCompare(y.reference));

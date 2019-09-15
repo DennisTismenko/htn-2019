@@ -79,23 +79,29 @@ const colorBySeverity: {
   none: 'green',
 };
 
+type CategoryLabel = 'security' | 'quality' | 'high risk' | 'medium risk' | 'low risk' | 'compliance';
+
 const colorByCategory: {
-  [key in 'security' | 'quality' | 'risk' | 'compliance']: string;
+  [key in CategoryLabel]: string;
 } = {
   security: '#3F51B5',
   quality: '#FFC107',
-  risk: '#F44336',
+  'high risk': '#F44336',
+  'medium risk': '#CC8033',
+  'low risk': '#DBDB70',
   compliance: '#00BCD4',
 };
 
 function HeuristicsGroup({group}: {group: PackageHeuristic[]}) {
   const [isShown, setIsShown] = useState(false);
+  const {severity, category} = group[0];
+  const categoryLabel: CategoryLabel = (category === 'risk' ? `${severity} ${category}` : category) as CategoryLabel;
   return (
     <Row>
       <Row>
-        <HeuristicCategory color={colorByCategory[group[0].category]}>
+        <HeuristicCategory color={colorByCategory[categoryLabel]}>
           <Text type="body" level={2} color="white" inline>
-            {group[0].category}
+            {categoryLabel}
           </Text>
         </HeuristicCategory>
         <TextButton
@@ -173,7 +179,6 @@ export default function PackageRoot() {
         JSON.stringify(JSON.parse(heuristic.reference).slice(0, 3)),
       ),
     );
-  console.log(heuristicsGroups);
   return (
     <>
       <Helmet>
