@@ -17,6 +17,7 @@
     "eslint-plugin-security": "^1.4.0",
     "express": "^4.17.1",
     "firebase-admin": "^8.5.0",
+    "semver": "^6.3.0",
     "simple-git": "^1.126.0",
     "snyk": "^1.226.2",
     "superagent": "^5.1.0",
