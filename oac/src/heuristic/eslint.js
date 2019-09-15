@@ -2,14 +2,16 @@ const debug = require('debug')('main');
 const path = require('path');
 const {CLIEngine} = require("eslint");
 
-const category = 'quality';
-
 const eslint = new CLIEngine({
+  useEslintrc: false,
   envs: [
     'node',
   ],
-  useEslintrc: false,
+  parserOptions: {
+    ecmaVersion: 2020
+  },
   plugins: [
+    'node',
     'security',
   ],
   rules: {
@@ -55,7 +57,9 @@ const eslint = new CLIEngine({
         'message': 'os',
       }],
     }],
-    'no-with': 'error',
+    'node/no-deprecated-api': 'error',
+    'node/no-missing-import': 'error',
+    'node/no-missing-require': 'error',
     'security/detect-buffer-noassert': 'error',
     'security/detect-child-process': 'error',
     'security/detect-disable-mustache-escape': 'error',
@@ -86,8 +90,8 @@ module.exports = async function eslintHeuristic(context) {
       }) => messages.map(result => {
         const resultLocation = `${path.relative(context.pkgDir, fileResult.filePath)}:${result.line}:${result.column}`;
         return {
-          severity: 'low',
-          category,
+          severity: ['low', 'medium', 'high'][result.severity],
+          category: 'risk',
           reference: JSON.stringify({
             [`eslint/${result.ruleId}`]: resultLocation,
           }),
