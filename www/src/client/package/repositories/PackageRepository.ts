@@ -77,7 +77,7 @@ export class PackageRepository {
       return [];
     }
     const res = await superagent.get(
-      `https://registry.npmjs.com/-/v1/search?text=${encodeURIComponent(
+      `${process.env.NPM_REGISTRY_API_BASEURL}/-/v1/search?text=${encodeURIComponent(
         sanitizedQuery,
       )}`,
     );
@@ -93,7 +93,7 @@ export class PackageRepository {
     version: string,
   ): Promise<PackageHeuristicsResponse> {
     const res = await superagent.get(
-      `http://localhost:3000/api/heuristics/${encodeURIComponent(
+      `${process.env.NODOME_API_BASEURL}/api/heuristics/${encodeURIComponent(
         pkg,
       )}/${encodeURIComponent(version)}`,
     );
