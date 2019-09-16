@@ -1,10 +1,42 @@
 import superagent from 'superagent';
 import {TextInputOptionEntry} from '../../core/components/inputs/TextInput.react';
 
-export interface PackageSimpleModel {
-  name: string;
-  version: string;
-  description: string;
+export interface PackageSearchResponse {
+  objects: {
+    package: {
+      name: string;
+      scope: string;
+      version: string;
+      description: string;
+      keywords: string[];
+      date: string;
+      links: {
+        [key: string]: string;
+      };
+      author: {
+        name: string;
+      };
+      publisher: {
+        username: string;
+        email: string;
+      };
+      maintainers: {
+        username: string;
+        email: string;
+      }[];
+    };
+    score: {
+      final: number;
+      detail: {
+        quality: number;
+        popularity: number;
+        maintenance: number;
+      };
+    };
+    searchScore: number;
+  }[];
+  total: number;
+  time: string;
 }
 
 export interface PackageHeuristic {
@@ -17,23 +49,29 @@ export interface PackageHeuristic {
 
 type Trust = 'yes' | 'no' | 'idk';
 
-export interface PackageAnalysisModel {
-  pkg: {
-    name: string;
-    version: string;
-    description: string;
-  };
-  trust: Trust;
-  latestVersion: string;
-  latestVersionTrust: Trust;
-  latestTrustedVersion: string;
-  heuristics: PackageHeuristic[];
-}
+export type PackageHeuristicsResponse =
+  | {
+      message: string;
+    }
+  | {
+      message?: undefined | null;
+      pkg: {
+        name: string;
+        version: string;
+        description: string;
+      };
+      versions: string[];
+      trust: Trust;
+      latestVersion: string;
+      latestVersionTrust: Trust;
+      latestTrustedVersion: string;
+      heuristics: PackageHeuristic[];
+    };
 
 export class PackageRepository {
-  async autoComplete(
+  async search(
     query: string,
-  ): Promise<TextInputOptionEntry<PackageSimpleModel>[]> {
+  ): Promise<TextInputOptionEntry<PackageSearchResponse['objects'][0]>[]> {
     const sanitizedQuery = query.trim();
     if (sanitizedQuery.length === 0) {
       return [];
@@ -43,26 +81,17 @@ export class PackageRepository {
         sanitizedQuery,
       )}`,
     );
-    return res.body.objects.map(
-      ({
-        package: {name, version, description},
-      }: {
-        package: PackageSimpleModel;
-      }) => ({
-        key: `${name}@${version}`,
-        value: {
-          name,
-          version,
-          description,
-        },
-      }),
-    );
+    const body = res.body as PackageSearchResponse;
+    return body.objects.map(value => ({
+      key: `${value.package.name}@${value.package.version}`,
+      value,
+    }));
   }
 
   async pkgByVersion(
     pkg: string,
     version: string,
-  ): Promise<PackageAnalysisModel> {
+  ): Promise<PackageHeuristicsResponse> {
     const res = await superagent.get(
       `http://localhost:3000/api/heuristics/${encodeURIComponent(
         pkg,

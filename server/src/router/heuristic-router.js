@@ -1,13 +1,14 @@
 const express = require('express');
 const heuristicService = require('../service/heuristic-service');
 const npmRegistry = require('../data-pipeline/utility/npmRegistry');
+const npmRegistryVersions = require('../data-pipeline/utility/npmRegistryVersions');
 const router = new express.Router();
 
 router.get('/:pkg/:version', async (req, res) => {
     try {
         const { pkg: pkgName, version: pkgVersion } = req.params;
         const pkg = await npmRegistry(pkgName, pkgVersion)
-        const lastestPkg = await npmRegistry(pkgName, 'latest')
+        const pkgVersions = await npmRegistryVersions(pkgName, pkgVersion)
         const heuristics = await heuristicService.runHeuristics(pkgName, pkgVersion);
         const trust = heuristics.some(({category, severity}) => (category === 'security' || category === 'risk') && severity === 'high')
             ? 'no'
@@ -17,8 +18,9 @@ router.get('/:pkg/:version', async (req, res) => {
         res.json({
             pkg,
             trust,
-            latestVersion: lastestPkg.version,
-            latestVersionTrust: trust === 'yes' ? (Math.random() > 0.5 ? 'yes' : 'no') : trust,
+            versions: pkgVersions,
+            latestVersion: pkgVersions[pkgVersions.length - 1],
+            latestVersionTrust: 'idk',
             latestTrustedVersion: null,
             heuristics,
         })

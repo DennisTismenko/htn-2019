@@ -1,6 +1,8 @@
 const debug = require('debug')('main');
 const fs = require('fs');
 const path = require('path');
+const util = require('util');
+const rimraf = require('rimraf');
 const npmRegistry = require('./utility/npmRegistry');
 const npmClone = require('./utility/npmClone');
 const gitClone = require('./utility/gitClone');
@@ -61,7 +63,15 @@ module.exports = async function main(pkgName, pkgVersion, localDirectory=undefin
       repoDir: tmpRepoDir && path.resolve(tmpRepoDir),
     };
 
-    return await heuristics(context);
+    const result = await heuristics(context);
+
+    if (!debug.enabled) {
+      await util.promisify(rimraf)(tmpDir);
+    } else {
+      debug('keeping temporary directory', JSON.stringify(tmpDir));
+    }
+
+    return result;
   } catch (err) {
     throw err;
   }

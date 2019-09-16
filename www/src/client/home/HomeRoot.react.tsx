@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Helmet from 'react-helmet';
 import {Text} from '../core/components/text/Text.react';
 import {PackageSearch} from '../package/components/PackageSearch.react';
+import {GitHubIcon} from '../core/components/social/GitHubIcon.react';
 
 export default function HomeRoot() {
   return (
@@ -11,10 +12,11 @@ export default function HomeRoot() {
         <title>nodome.io</title>
       </Helmet>
       <Root>
-        <Row>
-          <Text type="headline" level={1}>
+        <Row style={{display: 'flex', justifyContent: 'space-between'}}>
+          <Text type="headline" level={1} inline>
             nodome.io
           </Text>
+          <GitHubIcon />
         </Row>
         <Row>
           <Text type="headline" level={2}>

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-//const main = require('../src/data-pipeline');
 const main = require('../src/service/heuristic-service');
 
 function usage() {

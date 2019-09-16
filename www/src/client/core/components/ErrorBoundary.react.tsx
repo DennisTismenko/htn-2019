@@ -21,6 +21,7 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    // TODO: report error to devs
     console.error(error);
     return {
       error,

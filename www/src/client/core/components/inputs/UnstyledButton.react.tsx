@@ -3,25 +3,44 @@ import styled from 'styled-components';
 import {Link} from 'react-router-dom';
 
 export interface UnstyledButtonProps {
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
   children?: React.ReactNode;
-  link?: {
-    to: string;
-  };
-  onClick?: (el: React.MouseEvent<HTMLElement>) => void;
+  className?: string;
+  disabled?: boolean;
   ellipsis?: boolean;
+  link?: {to: string};
+  onBlur?: () => void;
+  onClick?: (el: React.MouseEvent<HTMLElement>) => void;
+  onFocus?: () => void;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const UnstyledButton: React.FunctionComponent<UnstyledButtonProps> = ({
+  children,
+  className,
+  disabled,
+  ellipsis,
+  link: linkProps = {to: null},
+  onBlur,
+  onClick,
+  onFocus,
   type = 'button',
-  link: linkProps = {
-    to: null,
-  },
-  ...props
 }): React.ReactElement => {
   const tag = linkProps.to != null ? Link : undefined;
-  return <Root as={tag} type={type} {...props} {...linkProps} />;
+  return (
+    <Root
+      {...linkProps}
+      as={tag}
+      className={className}
+      disabled={disabled}
+      ellipsis={ellipsis}
+      onBlur={onBlur}
+      onClick={onClick}
+      onFocus={onFocus}
+      type={type}
+    >
+      {children}
+    </Root>
+  );
 };
 
 interface RootProps {

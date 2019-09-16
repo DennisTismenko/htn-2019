@@ -1,12 +1,19 @@
 module.exports = {
     getNameVersion(pkgVersion) {
-        let splitNameVersion = pkgVersion.split('@');
+        const atIndex = decodeURIComponent(pkgVersion).lastIndexOf('@');
+        // if string starts with the only @ symbol or does not contain @
+        if (atIndex <= 0) {
+            return {
+                name: pkgVersion,
+                version: null,
+            }
+        }
         return {
-            name: splitNameVersion[0],
-            version: splitNameVersion[1]
+            name: pkgVersion.substring(0, atIndex),
+            version: pkgVersion.substring(atIndex + 1),
         }
     },
     concatPkgVersion(pkgName, pkgVersion) {
-        return `${pkgName}@${pkgVersion}`;
+        return encodeURIComponent(`${pkgName}@${pkgVersion}`);
     }
 }

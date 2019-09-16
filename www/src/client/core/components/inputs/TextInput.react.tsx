@@ -1,7 +1,7 @@
-import React, {ComponentType} from 'react';
+import React, {ComponentType, useMemo, useState, KeyboardEvent} from 'react';
 import styled from 'styled-components';
+import uniqueId from 'lodash/uniqueId';
 import {Text} from '../text/Text.react';
-import {genHTMLID} from '../genHTMLID';
 import {UnstyledButton} from './UnstyledButton.react';
 
 export interface TextInputOptionEntry<TextInputTOptionEntry> {
@@ -16,17 +16,25 @@ export interface TextInputOptionRendererProps<TextInputTOptionEntryValue> {
 export function TextInputDefaultOptionRenderer<TextInputTOptionEntryValue>({
   entry,
 }: TextInputOptionRendererProps<TextInputTOptionEntryValue>) {
-  return <>{String(entry.value)}</>;
+  return (
+    <Text type="body" level={2}>
+      {String(entry.value)}
+    </Text>
+  );
 }
 
 type TextInputProps<TTextInputOptionEntryValue> = {
   id?: string;
   label?: string;
+  variant?: 'regular' | 'unstyled';
   type?: 'text';
   name?: string;
   value?: string;
   placeholder?: string;
   onChange?: (value: string) => void;
+  onKeyPress?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   onOptionClick?: (
     option: TextInputOptionEntry<TTextInputOptionEntryValue>,
   ) => void;
@@ -40,15 +48,21 @@ export function TextInput<TTextInputOptionEntryValue>({
   id,
   label,
   type = 'text',
+  variant = 'regular',
   name,
   value,
   placeholder,
   onChange = () => {},
+  onKeyPress = () => {},
   onOptionClick = () => {},
+  onFocus = () => {},
+  onBlur = () => {},
   options,
   OptionRenderer = TextInputDefaultOptionRenderer,
 }: TextInputProps<TTextInputOptionEntryValue>) {
-  const htmlID = id || genHTMLID();
+  const htmlID = useMemo(() => id || uniqueId(), [id]);
+  const [isFocused, setIsFocused] = useState(false);
+  const [timeoutID, setTimeoutID] = useState<number>(-1);
   return (
     <Root>
       {label != null ? (
@@ -60,18 +74,39 @@ export function TextInput<TTextInputOptionEntryValue>({
       ) : null}
       <Input
         id={htmlID}
+        variant={variant}
         type={type}
         name={name}
         value={value}
         placeholder={placeholder}
         onChange={({target}) => onChange(target.value)}
+        onFocus={() => {
+          clearTimeout(timeoutID);
+          setIsFocused(true);
+          onFocus();
+        }}
+        onBlur={() => {
+          setTimeoutID(setTimeout(() => setIsFocused(false), 100));
+          onBlur();
+        }}
+        onKeyPress={onKeyPress}
       />
-      {options != null && options.length > 0 ? (
+      {options != null && options.length > 0 && isFocused ? (
         <OptionsRoot>
           {options.map(entry => (
             <TextInputOptionEntry
               key={entry.key}
-              onClick={() => onOptionClick(entry)}
+              onClick={() => {
+                onOptionClick(entry);
+                setIsFocused(false);
+              }}
+              onFocus={() => {
+                clearTimeout(timeoutID);
+                setIsFocused(true);
+              }}
+              onBlur={() => {
+                setTimeoutID(setTimeout(() => setIsFocused(false), 100));
+              }}
             >
               <OptionRenderer entry={entry} />
             </TextInputOptionEntry>
@@ -92,17 +127,37 @@ const Label = styled.label`
   margin: 0;
 `;
 
-const Input = styled.input`
+interface InputProps {
+  variant: 'regular' | 'unstyled';
+}
+
+const Input = styled.input<InputProps>`
   display: block;
   box-sizing: border-box;
-  padding: 8px;
-  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   width: 100%;
-  font-size: 18px;
-  border-radius: 4px;
-  background-color: var(--input-background-color);
-  border: 2px solid var(--input-border-color);
-  box-shadow: var(--box-shadow-1);
+  margin: 0;
+  ${({variant}) =>
+    variant === 'regular'
+      ? `
+    padding: 8px;
+    background-color: var(--input-background-color);
+    border: 2px solid var(--input-border-color);
+    border-radius: 4px;
+    box-shadow: var(--box-shadow-1);
+  `
+      : ''}
+  ${({variant}) =>
+    variant === 'unstyled'
+      ? `
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  `
+      : ''}
 `;
 
 const OptionsRoot = styled.div`
@@ -120,6 +175,7 @@ const OptionsRoot = styled.div`
   box-shadow: var(--box-shadow-2);
   max-height: 520px;
   overflow-y: scroll;
+  z-index: 1;
 `;
 
 const TextInputOptionEntry = styled(UnstyledButton)`

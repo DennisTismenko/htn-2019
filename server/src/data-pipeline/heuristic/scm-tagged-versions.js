@@ -1,5 +1,4 @@
 const gitTags = require('../utility/gitTags');
-const util = require('util');
 
 const sanitizeTagVersion = (tag) => {
   return tag.trim().replace(/^v(\d)/, '$1').toLowerCase();
